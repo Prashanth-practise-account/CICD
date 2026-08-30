@@ -1,6 +1,8 @@
 import re
 from pathlib import Path
+
 from pypdf import PdfReader
+
 
 class DocumentLoader:
     def __init__(self):
@@ -27,5 +29,5 @@ class DocumentLoader:
 
         except FileNotFoundError as e:
             print(f"Error: File not found - {e}")
-        except Exception as e:
+        except (OSError, ValueError) as e:
             print(f"An error occurred: {e}")

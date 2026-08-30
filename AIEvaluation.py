@@ -1,8 +1,7 @@
-from ragas import EvaluationDataset
-from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
-from ragas import evaluate
-from ragas.metrics import Accuracy, F1Score, RougeL, BLEU,Faithfulness,  AnswerRelevancy
+from ragas import EvaluationDataset, evaluate
+from ragas.llms import LangchainLLMWrapper
+from ragas.metrics import BLEU, Accuracy, AnswerRelevancy, F1Score, Faithfulness, RougeL
 
 evaluator_model = ChatOpenAI(
     model="gpt-4o-mini",
@@ -99,7 +98,7 @@ def print_ai_platform_dashboard(eval_result):
     elif hasattr(eval_result, "to_dict"):
         try:
             metrics = flatten_metrics(eval_result.to_dict())
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             metrics = {}
 
     requests = len(data) if isinstance(data, list) else 1

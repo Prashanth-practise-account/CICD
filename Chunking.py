@@ -1,8 +1,9 @@
+from DocumentLoader.DocumentLoader import loader
+from langchain_community.vectorstores import FAISS
 from langchian_text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
-from langchain_community.vectorstores import FAISS
-from DocumentLoader.DocumentLoader import loader
 from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 class Chunking:
     def __init__(self):
@@ -38,5 +39,5 @@ class Chunking:
         hybrid_score = (
             self.keyword_weight * scores + self.semantic_weight * semantix_search
         )
-        sort = sort(hybrid_score)
-        return sort[:top_k]
+        sorted_scores = sorted(hybrid_score)
+        return sorted_scores[:top_k]

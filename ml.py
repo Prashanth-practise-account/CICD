@@ -1,9 +1,10 @@
+import joblib
+import mlflow
+import mlflow.sklearn
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
-import mlflow,joblib
-import mlflow.sklearn
+from sklearn.model_selection import train_test_split
 
 data = {
     "age": [25, 35, 45, 23, 52, 40, 29, 60, 31, 48],
