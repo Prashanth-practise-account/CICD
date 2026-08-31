@@ -69,12 +69,24 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: build docker image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/financial-risk-ai:latest .
+          if [ -z "${DOCKER_USERNAME}" ]; then
+            echo "::error::DOCKER_USERNAME secret is not set. Add it in GitHub repository secrets."
+            exit 1
+          fi
+          docker build -t "${DOCKER_USERNAME}/financial-risk-ai:latest" .
 
       - name: Push Docker image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/financial-risk-ai:latest
+          if [ -z "${DOCKER_USERNAME}" ]; then
+            echo "::error::DOCKER_USERNAME secret is not set. Add it in GitHub repository secrets."
+            exit 1
+          fi
+          docker push "${DOCKER_USERNAME}/financial-risk-ai:latest"
 
 
   deploy-staging:
