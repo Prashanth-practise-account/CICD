@@ -2,31 +2,36 @@ name: CI PIPELINE
 
 on:
   push:
-    - main
+    branches:
+      - main
 
 jobs:
+
   unit-test:
     runs-on: ubuntu-latest
+
     steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Setup Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: "3.12"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-        - name: Install dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-        - name: Run unit tests
-          run: |
-            pytest
+      - name: Run unit tests
+        run: |
+          pytest
+
 
   code-quality:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,24 +49,100 @@ jobs:
       - name: Run Ruff
         run: |
           ruff check .
+
+
   deploy:
-    needs: 
+    needs:
       - unit-test
       - code-quality
+
     runs-on: ubuntu-latest
+
     steps:
       - name: checkout code
         uses: actions/checkout@v4
+
       - name: login to docker hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: build docker image
         run: |
-          docker build \
-            -t ${{ secrets.DOCKER_USERNAME }}/financial-risk-ai:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/financial-risk-ai:latest .
+
       - name: Push Docker image
         run: |
-          docker push \
-            ${{ secrets.DOCKER_USERNAME }}/financial-risk-ai:latest 
+          docker push ${{ secrets.DOCKER_USERNAME }}/financial-risk-ai:latest
+
+
+  deploy-staging:
+    needs:
+      - deploy
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Minikube
+        uses: medyagh/setup-minikube@latest
+
+      - name: Start Kubernetes
+        run: |
+          minikube start
+
+      - name: Deploy application
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Check pods
+        run: |
+          kubectl get pods
+
+      - name: Check service
+        run: |
+          kubectl get services
+
+      # QA TESTS START HERE
+
+      - name: Setup Python for QA
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install QA dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest requests
+
+      - name: Get Minikube IP
+        run: |
+          echo "MINIKUBE_IP=$(minikube ip)" >> $GITHUB_ENV
+
+      - name: Run API Tests
+        env:
+          STAGING_URL: http://${{ env.MINIKUBE_IP }}:30000
+        run: |
+          pytest qa/test_api.py
+
+      - name: Run Integration Tests
+        env:
+          STAGING_URL: http://${{ env.MINIKUBE_IP }}:30000
+        run: |
+          pytest qa/test_integration.py
+
+      - name: Run E2E Tests
+        env:
+          STAGING_URL: http://${{ env.MINIKUBE_IP }}:30000
+        run: |
+          pytest qa/test_e2e.py
+
+      - name: Run Smoke Tests
+        env:
+          STAGING_URL: http://${{ env.MINIKUBE_IP }}:30000
+        run: |
+          pytest qa/test_smoke.py
