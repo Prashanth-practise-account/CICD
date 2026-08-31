@@ -72,22 +72,13 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          DOCKER_USERNAME="$(printf '%s' "${DOCKER_USERNAME}" | tr -d '\r\n' | xargs)"
-          if [ -z "${DOCKER_USERNAME}" ]; then
-            echo "::error::DOCKER_USERNAME secret is empty or contains a newline. Set it to your exact Docker Hub username, without extra whitespace."
-            exit 1
-          fi
+          
           docker build -t "${DOCKER_USERNAME}/financial-risk-ai:latest" .
 
       - name: Push Docker image
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          DOCKER_USERNAME="$(printf '%s' "${DOCKER_USERNAME}" | tr -d '\r\n' | xargs)"
-          if [ -z "${DOCKER_USERNAME}" ]; then
-            echo "::error::DOCKER_USERNAME secret is empty or contains a newline. Set it to your exact Docker Hub username, without extra whitespace."
-            exit 1
-          fi
           docker push "${DOCKER_USERNAME}/financial-risk-ai:latest"
 
 
