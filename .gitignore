@@ -4,3 +4,4 @@ __pycache__/
 randomforest_model.pkl
 Prashanth_Resume_6yrs.pdf
 .ruff_cache/*
+.pytest_cache/*
